@@ -56,9 +56,11 @@ const PRESET_PAYLOAD_B = {
   }
 };
 
-export default function Layer2HospitalRanker({ onSelectHospitalAndReserve }) {
-  const [activePreset, setActivePreset] = useState('PRESET_A');
-  const [payloadInput, setPayloadInput] = useState(JSON.stringify(PRESET_PAYLOAD_A, null, 2));
+export default function Layer2HospitalRanker({ onSelectHospitalAndReserve, externalPayload }) {
+  const [activePreset, setActivePreset] = useState(externalPayload ? 'DOCTOR_AI' : 'PRESET_A');
+  const [payloadInput, setPayloadInput] = useState(
+    JSON.stringify(externalPayload || PRESET_PAYLOAD_A, null, 2)
+  );
   const [loading, setLoading] = useState(false);
   const [rankingResult, setRankingResult] = useState(null);
   const [error, setError] = useState(null);
@@ -66,10 +68,16 @@ export default function Layer2HospitalRanker({ onSelectHospitalAndReserve }) {
   const [reservingId, setReservingId] = useState(null);
   const [reservationModal, setReservationModal] = useState(null);
 
-  // Auto-fetch rank results on initial load with Preset A
+  // Auto-fetch rank results on initial load or when externalPayload updates
   useEffect(() => {
-    fetchHospitalRankings(PRESET_PAYLOAD_A);
-  }, []);
+    if (externalPayload) {
+      setActivePreset('DOCTOR_AI');
+      setPayloadInput(JSON.stringify(externalPayload, null, 2));
+      fetchHospitalRankings(externalPayload);
+    } else {
+      fetchHospitalRankings(PRESET_PAYLOAD_A);
+    }
+  }, [externalPayload]);
 
   const fetchHospitalRankings = async (payloadToSubmit) => {
     setLoading(true);

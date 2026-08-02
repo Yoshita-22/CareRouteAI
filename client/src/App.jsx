@@ -1,14 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { socket, joinRoom } from './services/socket';
 import Navbar from './components/Navbar';
+import HomePage from './components/HomePage';
 import EmergencyMap from './components/EmergencyMap';
 import HospitalERDashboard from './components/HospitalERDashboard';
 import Layer2HospitalRanker from './components/Layer2HospitalRanker';
+import DoctorAvatarVideoCall from './components/DoctorAvatarVideoCall';
+import WhatsAppCallApp from './components/WhatsAppCallApp';
+import RealtimeVoiceAgent from './components/RealtimeVoiceAgent';
+import WhatsAppAIDoctorCall from './components/WhatsAppAIDoctorCall';
+import LiveKitFullDuplexCall from './components/LiveKitFullDuplexCall';
+import OpenAIRealtimeAgent from './components/OpenAIRealtimeAgent';
+import PatientHistoryPage from './components/PatientHistoryPage';
+import GeminiMultimodalTriage from './components/GeminiMultimodalTriage';
 import confetti from 'canvas-confetti';
 import { AlertCircle, X, ShieldAlert, Sparkles } from 'lucide-react';
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState('layer2');
+  const [activeTab, setActiveTab] = useState('home');
+  const [doctorPayloadHandover, setDoctorPayloadHandover] = useState(null);
   const [isConnected, setIsConnected] = useState(socket.connected);
   const [dispatches, setDispatches] = useState([]);
   const [ambulances, setAmbulances] = useState([]);
@@ -130,6 +140,17 @@ export default function App() {
     };
   }, []);
 
+  // Handler: Trigger Emergency SOS
+  const handleTriggerEmergencySOS = () => {
+    setAlertNotification({
+      type: 'SOS_DISPATCH',
+      title: '🚨 EMERGENCY SOS ACTIVATED',
+      message: 'ALS Ambulance team dispatched to live location! Lock token generated for nearest ICU bed.'
+    });
+    setActiveTab('er');
+    handleSelectPatient('PAT-3341');
+  };
+
   // Handler: Select specific emergency patient case
   const handleSelectPatient = (patientId) => {
     fetch('/api/dispatch/create', {
@@ -229,8 +250,7 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         isConnected={isConnected}
-        onStartSimulation={handleStartSimulation}
-        isSimulating={isSimulating}
+        onTriggerEmergencySOS={handleTriggerEmergencySOS}
       />
 
       {/* Real-time Toast Emergency Alert Banner */}
@@ -259,10 +279,76 @@ export default function App() {
       {/* Main Container */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
         
+        {/* Gemini Multimodal API View */}
+        {activeTab === 'gemini_multimodal' && (
+          <GeminiMultimodalTriage
+            onNavigateToHospitalRanker={(payload) => {
+              setDoctorPayloadHandover(payload);
+              setActiveTab('layer2');
+            }}
+          />
+        )}
+
+        {/* Home Overview View */}
+        {activeTab === 'home' && (
+          <HomePage
+            setActiveTab={setActiveTab}
+            onTriggerEmergencySOS={handleTriggerEmergencySOS}
+          />
+        )}
+
+        {/* LiveKit Full-Duplex WebRTC Engine View */}
+        {activeTab === 'livekit_duplex' && (
+          <LiveKitFullDuplexCall
+            onNavigateToHospitalRanker={(payload) => {
+              setDoctorPayloadHandover(payload);
+              setActiveTab('layer2');
+            }}
+          />
+        )}
+
+        {/* WhatsApp-Style AI Doctor Voice Call View */}
+        {activeTab === 'whatsapp_doctor' && (
+          <WhatsAppAIDoctorCall
+            onNavigateToHospitalRanker={(payload) => {
+              setDoctorPayloadHandover(payload);
+              setActiveTab('layer2');
+            }}
+          />
+        )}
+
+        {/* OpenAI WebRTC Realtime Voice Engine */}
+        {activeTab === 'openai_rtc' && (
+          <OpenAIRealtimeAgent />
+        )}
+
+
+
+        {/* Doctor AI Avatar Video Consult & Vision Lesion Analyzer View */}
+        {activeTab === 'doctor' && (
+          <DoctorAvatarVideoCall
+            onNavigateToHospitalRanker={(payload) => {
+              setDoctorPayloadHandover(payload);
+              setActiveTab('layer2');
+            }}
+          />
+        )}
+
+        {/* Real-Time Two-Way Human-Like AI Voice Agent View */}
+        {activeTab === 'voice_agent' && (
+          <RealtimeVoiceAgent />
+        )}
+
+        {/* WhatsApp P2P WebRTC Real-Time Calling View */}
+        {activeTab === 'webrtc_call' && (
+          <WhatsAppCallApp />
+        )}
+
         {/* Layer 2: Hospital Match Scoring & Ranking Engine View */}
         {activeTab === 'layer2' && (
           <Layer2HospitalRanker
             onSelectHospitalAndReserve={handleSelectHospitalAndReserve}
+            externalPayload={doctorPayloadHandover}
           />
         )}
 
@@ -296,12 +382,21 @@ export default function App() {
           </>
         )}
 
+        {/* Patient Consultation History Vault View */}
+        {activeTab === 'history' && (
+          <PatientHistoryPage />
+        )}
+
+        {/* System Admin Panel View */}
+        {activeTab === 'admin' && (
+          <AdminPanelPage />
+        )}
 
       </main>
 
       {/* Footer */}
       <footer className="border-t border-slate-900 bg-slate-950 py-4 text-center text-xs text-slate-500">
-        <p>CareRoute AI Emergency System — Smart Hospital Ranker & Real-Time ER Dispatch</p>
+        <p>CareRoute AI Emergency System — Smart AI Doctor Video Consult & Real-Time ER Dispatch</p>
       </footer>
 
     </div>

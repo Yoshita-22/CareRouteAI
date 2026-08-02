@@ -2,8 +2,15 @@ const express = require('express');
 const router = express.Router();
 const dispatchController = require('../controllers/dispatchController');
 const hospitalController = require('../controllers/hospitalController');
+const doctorController = require('../controllers/doctorController');
 
 module.exports = function (io) {
+  // AI Doctor Avatar Video Call & Vision Routes
+  router.post('/doctor/multimodal-triage', doctorController.processMultimodalTriageEndpoint);
+  router.post('/doctor/consult', doctorController.consultDoctorEndpoint);
+  router.post('/doctor/beyond-presence/session', doctorController.initiateBeyondPresenceEndpoint);
+  router.get('/doctor/conversations', doctorController.getConversationsEndpoint);
+
   // Layer 2 Hospital Match Scoring & Ranking Routes
   router.post('/hospitals/rank', hospitalController.rankHospitalsEndpoint);
   router.get('/hospitals', hospitalController.getRawHospitals);

@@ -256,11 +256,73 @@ async function confirmReservationInDB({ reservation_id }) {
   };
 }
 
+// In-Memory Fallback Doctor Conversations Store
+const MOCK_DOCTOR_CONVERSATIONS = [];
+
+/**
+ * Saves Patient & Doctor Conversation, Vision Analysis, and Requirement Payload into Supabase table `conversations`.
+ */
+async function saveDoctorConversationInDB({ patient_id, conversation_transcript, lesion_analysis, requirement_payload, patient_location }) {
+  const convoRecord = {
+    id: `convo-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    patient_id: patient_id || 'PAT-DEMO-001',
+    conversation_transcript: conversation_transcript || [],
+    lesion_analysis: lesion_analysis || null,
+    requirement_payload: requirement_payload || null,
+    patient_location: patient_location || null,
+    created_at: new Date().toISOString()
+  };
+
+  if (supabase) {
+    try {
+      const { data, error } = await supabase
+        .from('conversations')
+        .insert([convoRecord])
+        .select('*')
+        .single();
+
+      if (!error && data) {
+        return { status: 'SUCCESS', data, db_source: 'SUPABASE_DB' };
+      }
+      if (error) {
+        console.warn('⚠️ Supabase save conversation warning, using mock store:', error.message);
+      }
+    } catch (err) {
+      console.warn('⚠️ Exception saving conversation to Supabase:', err.message);
+    }
+  }
+
+  MOCK_DOCTOR_CONVERSATIONS.unshift(convoRecord);
+  return { status: 'SUCCESS', data: convoRecord, db_source: 'MOCK_STORE' };
+}
+
+/**
+ * Retrieves past doctor conversations from Supabase table `conversations` or mock store.
+ */
+async function getDoctorConversationsFromDB() {
+  if (supabase) {
+    try {
+      const { data, error } = await supabase.from('conversations').select('*').order('created_at', { ascending: false });
+      if (!error && data) {
+        return { status: 'SUCCESS', conversations: data, db_source: 'SUPABASE_DB' };
+      }
+    } catch (err) {
+      console.warn('⚠️ Exception fetching conversations from Supabase:', err.message);
+    }
+  }
+
+  return { status: 'SUCCESS', conversations: MOCK_DOCTOR_CONVERSATIONS, db_source: 'MOCK_STORE' };
+}
+
 module.exports = {
   fetchHospitalsFromDB,
   createReservationInDB,
   confirmReservationInDB,
+  saveDoctorConversationInDB,
+  getDoctorConversationsFromDB,
   MOCK_SUPABASE_HOSPITALS,
-  MOCK_RESERVATIONS
+  MOCK_RESERVATIONS,
+  MOCK_DOCTOR_CONVERSATIONS
 };
+
 
