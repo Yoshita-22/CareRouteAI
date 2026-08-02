@@ -78,7 +78,7 @@ export default function OpenAIRealtimeAgent() {
     try {
       // 1. Fetch the Ephemeral WebRTC Token from backend
       addLog('system', 'Requesting Ephemeral Token from backend...');
-      const tokenResponse = await fetch('http://localhost:5000/api/openai-rtc-token');
+      const tokenResponse = await fetch('/api/openai-rtc-token');
       if (!tokenResponse.ok) {
         throw new Error(`Failed to get token: ${await tokenResponse.text()}`);
       }
