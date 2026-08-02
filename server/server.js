@@ -92,6 +92,10 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(PORT, () => {
-  console.log(`🚀 CareRoute AI Server running on http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  server.listen(PORT, () => {
+    console.log(`🚀 CareRoute AI Server running on http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
